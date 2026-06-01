@@ -19,6 +19,8 @@ export default function DashboardPage() {
     { date: '2024-01-05', action: 'Listed for sale', status: 'Active' },
   ];
 
+  const hasData = stats.length > 0 || activities.length > 0;
+
   return (
     <ErrorBoundary>
     <div className="container" style={{ padding: isMobile ? '16px' : '24px' }}>
@@ -26,61 +28,99 @@ export default function DashboardPage() {
         Dashboard
       </h1>
 
-      {/* Stats Grid */}
-      <div className="dashboard-grid" style={{ marginBottom: '32px' }}>
-        {stats.map((stat, idx) => (
-          <div key={idx} className="card">
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
-              {stat.label}
-            </div>
-            <div style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 'bold', color: '#1f2937' }}>
-              {stat.value}
-            </div>
+      {hasData ? (
+        <>
+          {/* Stats Grid */}
+          <div className="dashboard-grid" style={{ marginBottom: '32px' }}>
+            {stats.map((stat, idx) => (
+              <div key={idx} className="card">
+                <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
+                  {stat.label}
+                </div>
+                <div style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 'bold', color: '#1f2937' }}>
+                  {stat.value}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Recent Activity */}
-      <h2 style={{ fontSize: '20px', marginBottom: '16px' }}>Recent Activity</h2>
-      
-      {isMobile ? (
-        <div className="mobile-card-container">
-          {activities.map((activity, idx) => (
-            <div key={idx} className="mobile-card">
-              <div className="mobile-card-title">{activity.date}</div>
-              <div className="mobile-card-row">
-                <span className="mobile-card-label">Action</span>
-                <span className="mobile-card-value">{activity.action}</span>
-              </div>
-              <div className="mobile-card-row">
-                <span className="mobile-card-label">Status</span>
-                <span className="mobile-card-value" style={{ color: '#10b981' }}>
-                  {activity.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Action</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
+          {/* Recent Activity */}
+          <h2 style={{ fontSize: '20px', marginBottom: '16px' }}>Recent Activity</h2>
+          
+          {isMobile ? (
+            <div className="mobile-card-container">
               {activities.map((activity, idx) => (
-                <tr key={idx}>
-                  <td>{activity.date}</td>
-                  <td>{activity.action}</td>
-                  <td style={{ color: '#10b981' }}>{activity.status}</td>
-                </tr>
+                <div key={idx} className="mobile-card">
+                  <div className="mobile-card-title">{activity.date}</div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Action</span>
+                    <span className="mobile-card-value">{activity.action}</span>
+                  </div>
+                  <div className="mobile-card-row">
+                    <span className="mobile-card-label">Status</span>
+                    <span className="mobile-card-value" style={{ color: '#10b981' }}>
+                      {activity.status}
+                    </span>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Action</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activities.map((activity, idx) => (
+                    <tr key={idx}>
+                      <td>{activity.date}</td>
+                      <td>{activity.action}</td>
+                      <td style={{ color: '#10b981' }}>{activity.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          padding: '64px 24px', 
+          background: 'var(--bg-secondary, #f9fafb)', 
+          borderRadius: '12px',
+          textAlign: 'center',
+          marginTop: '32px'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🌱</div>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-primary)' }}>
+            Welcome to Carbon Ledger
+          </h2>
+          <p style={{ fontSize: '16px', color: '#6b7280', maxWidth: '400px', marginBottom: '24px' }}>
+            Your dashboard is empty right now. Once you purchase or retire carbon credits, your portfolio stats and recent activities will appear here.
+          </p>
+          <a 
+            href="/marketplace" 
+            style={{ 
+              padding: '12px 24px', 
+              background: '#4CAF50', 
+              color: 'white', 
+              textDecoration: 'none', 
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              display: 'inline-block'
+            }}
+          >
+            Browse Marketplace
+          </a>
         </div>
       )}
     </div>

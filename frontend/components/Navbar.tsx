@@ -1,10 +1,12 @@
 'use client';
 
 import { useWallet } from '@/lib/wallet/WalletContext';
+import { useTheme } from '@/lib/theme-context';
 import { useEffect, useState } from 'react';
 
 export default function Navbar() {
   const { isConnected, publicKey, error, connect, disconnect, checkNetwork } = useWallet();
+  const { theme, setTheme } = useTheme();
   const [networkWarning, setNetworkWarning] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,6 +52,13 @@ export default function Navbar() {
           <span style={styles.warning}>{networkWarning}</span>
         )}
         
+        <button 
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} 
+          style={styles.connectBtn}
+        >
+          {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+        </button>
+
         {isConnected && publicKey ? (
           <div style={styles.walletInfo}>
             <span style={styles.address}>{truncateAddress(publicKey)}</span>
