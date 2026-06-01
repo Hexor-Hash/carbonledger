@@ -124,6 +124,26 @@ describe('RolesGuard', () => {
     await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
   });
 
+  it('throws 403 with "Verifier role required" when verifier role is required', async () => {
+    setupReflector(false, ['verifier', 'admin']);
+    prismaMock.user.findUnique.mockResolvedValue({ publicKey: 'GKEY', role: 'corporation' });
+    const token = signToken({ sub: 'GKEY', role: 'corporation', type: 'access' });
+    const ctx = makeContext({ token });
+    await expect(guard.canActivate(ctx)).rejects.toThrow(
+      new ForbiddenException('Verifier role required'),
+    );
+  });
+
+  it('throws 403 with "Insufficient permissions" for non-verifier role mismatch', async () => {
+    setupReflector(false, ['admin']);
+    prismaMock.user.findUnique.mockResolvedValue({ publicKey: 'GKEY', role: 'corporation' });
+    const token = signToken({ sub: 'GKEY', role: 'corporation', type: 'access' });
+    const ctx = makeContext({ token });
+    await expect(guard.canActivate(ctx)).rejects.toThrow(
+      new ForbiddenException('Insufficient permissions'),
+    );
+  });
+
   it('uses DB role, not JWT role claim', async () => {
     // JWT says corporation, DB says admin — DB wins
     setupReflector(false, ['admin']);
