@@ -1,16 +1,21 @@
-import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
+import { Injectable, NotFoundException, ConflictException, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import { RegisterProjectDto, UpdateProjectStatusDto, SearchProjectsDto, PaginatedProjectsResponse, ProjectStatus, OracleFreshness } from "./projects.dto";
 import { MailService } from "../mail/mail.service";
 import { MailEvent } from "../mail/mail.constants";
 import { ProjectStateMachineService, ProjectStatus as SMStatus } from "./project-state-machine.service";
+import { RedisService } from "../redis.service";
+import { PROJECT_DETAIL_CACHE_TTL_SECONDS, projectDetailCacheKey } from "../cache/cache.constants";
 
 @Injectable()
 export class ProjectsService {
+  private readonly logger = new Logger(ProjectsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private readonly stateMachine: ProjectStateMachineService,
+    private readonly redisService: RedisService,
   ) {}
 
   async findAll(filters: { methodology?: string; country?: string; vintage?: number; cursor?: string; limit?: number }) {
@@ -149,8 +154,19 @@ export class ProjectsService {
   }
 
   async findOne(projectId: string) {
+    const cacheKey = projectDetailCacheKey(projectId);
+    const cachedProject = await this.redisService.get<any>(cacheKey);
+
+    if (cachedProject) {
+      return cachedProject;
+    }
+
+    this.logger.log(`Project detail cache miss: ${cacheKey}`);
+
     const project = await this.prisma.carbonProject.findUnique({ where: { projectId } });
     if (!project) throw new NotFoundException(`Project ${projectId} not found`);
+
+    await this.redisService.set(cacheKey, project, PROJECT_DETAIL_CACHE_TTL_SECONDS);
     return project;
   }
 
@@ -163,6 +179,10 @@ export class ProjectsService {
     return this.prisma.carbonProject.create({ data: dto });
   }
 
+  private async invalidateProjectCache(projectId: string) {
+    await this.redisService.del(projectDetailCacheKey(projectId));
+  }
+
   async updateStatus(projectId: string, dto: UpdateProjectStatusDto, actor = 'admin') {
     const project = await this.findOne(projectId);
     await this.stateMachine.transition(
@@ -172,10 +192,12 @@ export class ProjectsService {
       actor,
       dto.reason,
     );
-    return this.prisma.carbonProject.update({
+    const updated = await this.prisma.carbonProject.update({
       where: { projectId },
       data:  { status: dto.status },
     });
+    await this.invalidateProjectCache(projectId);
+    return updated;
   }
 
   async verify(projectId: string, verifierPublicKey: string) {
@@ -201,6 +223,7 @@ export class ProjectsService {
       });
     }
 
+    await this.invalidateProjectCache(projectId);
     return updated;
   }
 
@@ -213,9 +236,11 @@ export class ProjectsService {
       verifierPublicKey,
       reason,
     );
-    return this.prisma.carbonProject.update({
+    const updated = await this.prisma.carbonProject.update({
       where: { projectId },
       data:  { status: 'Rejected' },
     });
+    await this.invalidateProjectCache(projectId);
+    return updated;
   }
 }
