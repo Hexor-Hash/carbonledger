@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useWallet } from '@/lib/wallet/WalletContext';
+import { useTheme } from '@/lib/theme-context';
 import { useEffect, useState } from 'react';
 
 /** Top-level nav items. `href` is also used as the prefix for nested-route matching. */
@@ -27,6 +28,7 @@ export function isActive(pathname: string, href: string): boolean {
 export default function Navbar() {
   const pathname = usePathname();
   const { isConnected, publicKey, error, connect, disconnect, checkNetwork } = useWallet();
+  const { theme, setTheme } = useTheme();
   const [networkWarning, setNetworkWarning] = useState<string | null>(null);
 
   useEffect(() => {
@@ -81,6 +83,17 @@ export default function Navbar() {
       {/* Wallet controls */}
       <div style={styles.right}>
         {error && <span style={styles.error}>{error}</span>}
+        
+        {networkWarning && (
+          <span style={styles.warning}>{networkWarning}</span>
+        )}
+        
+        <button 
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} 
+          style={styles.connectBtn}
+        >
+          {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+        </button>
         {networkWarning && <span style={styles.warning}>{networkWarning}</span>}
 
         {isConnected && publicKey ? (
