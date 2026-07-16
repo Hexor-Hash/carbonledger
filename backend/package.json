@@ -17,6 +17,7 @@
     "test:db:down": "docker-compose -f docker-compose.test.yml down -v",
     "test:db:migrate": "dotenv -e .env.test -- prisma migrate deploy",
     "test:db:reset": "dotenv -e .env.test -- prisma migrate reset --force",
+    "test:throttle": "jest src/throttle --passWithNoTests",
     "pretest:e2e": "npm run test:db:up && npm run test:db:migrate",
     "export:openapi": "npx ts-node --transpile-only src/export-openapi.ts"
   },
@@ -87,4 +88,3 @@
     "typescript": "^6.0.3"
   }
 }
-
